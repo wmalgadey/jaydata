@@ -99,14 +99,14 @@ gulp.task('jaydata.min', function(){
     .pipe(gulp.dest('./dist/public'));
 });
 
-gulp.task('minify', ['bundle'], function(){
-    return gulp.src('./dist/public/**/*.js')
-    .pipe(uglify({
-        preserveComments: 'license'
-    }))
-    .pipe(rename({ extname: '.min.js' }))
-    .pipe(gulp.dest('./dist/public'));
-});
+//gulp.task('minify', ['bundle'], function(){
+//    return gulp.src('./dist/public/**/*.js')
+//    .pipe(uglify({
+//        preserveComments: 'license'
+//    }))
+//    .pipe(rename({ extname: '.min.js' }))
+//    .pipe(gulp.dest('./dist/public'));
+//});
 
 gulp.task('clean', function(){
     return del([
@@ -149,6 +149,24 @@ gulp.task('release', ['bundle'], function(){
     return gulp.src(['./dist/public/**/*', './build/*.txt'])
     .pipe(replace('<%=version%>', pkg.version))
     .pipe(zip.dest('./release/jaydata.zip'));
+});
+
+gulp.task('npmpack', /*['nodejs', 'bundle', 'lint'],*/ function(callback) {
+    npm.load(null, function (loadError) {
+        if (loadError) {
+            return callback(loadError);
+        }
+        var metadata = require('./dist/package.json');
+        metadata = JSON.parse(JSON.stringify(metadata));
+        npm.commands.pack(['./dist'], function (packError) {
+            if (packError) {
+                return callback(packError);
+            }
+            var fileName = metadata.name + '-' + metadata.version + '.tgz';
+            var bodyPath = require.resolve('./' + fileName);
+            var body = fs.createReadStream(bodyPath);
+        })
+    });
 });
 
 gulp.task('npm', /*['nodejs', 'bundle', 'lint'],*/ function (callback) {
@@ -326,9 +344,9 @@ function gulpTask(td, config){
 
     task = task
         .pipe(gulp.dest(td.destFolder))
-        .pipe(uglify({
+        /*.pipe(uglify({
             preserveComments: 'license'
-        }))
+        }))*/
         .pipe(rename({ extname: '.min.js' }))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(td.destFolder));
